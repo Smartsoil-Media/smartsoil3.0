@@ -4,8 +4,7 @@ import { useRouter } from 'next/navigation'
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
-import { useAuth } from '@/contexts/auth-context'
-import { ArrowLeft, ChevronDown, ChevronRight, CheckCircle } from 'lucide-react'
+import { CheckCircle, ArrowLeft, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import type { Course, Lesson } from '@/types/course'
 import { cn } from '@/lib/utils'
@@ -21,24 +20,25 @@ export function CourseSidebar({
     course,
     currentLessonId,
     onLessonSelect,
-    completedLessons
+    completedLessons = []
 }: CourseSidebarProps) {
     const router = useRouter()
-    const { userProfile } = useAuth()
     const totalLessons = course.modules.reduce((acc, module) => acc + module.lessons.length, 0)
-    const progressPercentage = (completedLessons.length / totalLessons) * 100
-    const [expandedModules, setExpandedModules] = useState<string[]>([])
+    const progressPercentage = totalLessons > 0 ? (completedLessons.length / totalLessons) * 100 : 0
+
+    const [expandedModules, setExpandedModules] = useState<string[]>([course.modules[0]?.id || ''])
 
     const toggleModule = (moduleId: string) => {
-        setExpandedModules(prev =>
-            prev.includes(moduleId)
-                ? prev.filter(id => id !== moduleId)
-                : [...prev, moduleId]
+        setExpandedModules(current =>
+            current.includes(moduleId)
+                ? current.filter(id => id !== moduleId)
+                : [...current, moduleId]
         )
     }
 
     const handleLessonClick = (lesson: Lesson) => {
         onLessonSelect(lesson)
+        router.push(`/dashboard/course?id=${course.id}&lessonId=${lesson.id}`, { scroll: false })
     }
 
     return (

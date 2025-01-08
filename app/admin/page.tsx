@@ -39,28 +39,46 @@ export default function AdminPage() {
                 const courseRef = doc(coursesRef)
                 const courseId = courseRef.id
 
-                // Flatten modules and lessons into a single lessons array
-                const lessons = courseData.modules.flatMap(module =>
-                    module.lessons.map(lesson => ({
-                        id: doc(collection(db, 'temp')).id,
-                        title: lesson.title,
-                        description: lesson.description,
-                        content: lesson.content,
-                        order: lesson.order,
-                        resources: lesson.resources || []
-                    }))
-                )
-
+                // First create the course document
                 await setDoc(courseRef, {
                     id: courseId,
                     title: courseData.title,
                     description: courseData.description,
                     instructor: courseData.instructor,
                     thumbnail: courseData.thumbnail,
-                    lessons: lessons,
+                    order: courseData.order,
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp()
                 })
+
+                // Then create modules subcollection
+                for (const module of courseData.modules) {
+                    const moduleRef = doc(collection(db, 'courses', courseId, 'modules'))
+                    const moduleId = moduleRef.id
+
+                    // Create module document
+                    await setDoc(moduleRef, {
+                        id: moduleId,
+                        title: module.title,
+                        description: module.description,
+                        order: module.order
+                    })
+
+                    // Create lessons subcollection for this module
+                    for (const lesson of module.lessons) {
+                        const lessonRef = doc(collection(db, 'courses', courseId, 'modules', moduleId, 'lessons'))
+                        await setDoc(lessonRef, {
+                            id: lessonRef.id,
+                            title: lesson.title,
+                            description: lesson.description,
+                            content: lesson.content,
+                            order: lesson.order,
+                            moduleId: moduleId,
+                            courseId: courseId,
+                            resources: lesson.resources || []
+                        })
+                    }
+                }
             }
 
             setStatus('Import completed successfully!')

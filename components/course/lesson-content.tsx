@@ -1,10 +1,10 @@
 "use client"
 
-import { Button } from '@/components/ui/button'
-import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
-import type { Lesson } from '@/types/course'
+import { Button } from "@/components/ui/button"
+import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Markdown } from '@/components/markdown'
+import type { Lesson } from '@/types/course'
 
 interface LessonContentProps {
     lesson: Lesson
@@ -23,6 +23,9 @@ export function LessonContent({
     completedLessons,
     onToggleComplete
 }: LessonContentProps) {
+    console.log('LessonContent received lesson:', lesson)
+    console.log('Lesson content:', lesson.content)
+
     const [isCompleting, setIsCompleting] = useState(false)
 
     const handleToggleComplete = async () => {
@@ -34,54 +37,51 @@ export function LessonContent({
     // Find video content if it exists
     const videoBlock = lesson.content.find(block => block.type === 'video')
     // Filter out video from main content
-    const mainContent = lesson.content.filter(block => block.type !== 'video')
+    const mainContent = lesson.content.filter(block => block.type === 'text')
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
             {/* Video Section */}
             {videoBlock && (
                 <div className="aspect-video w-full rounded-lg overflow-hidden border border-border">
-                    <iframe
-                        src={videoBlock.metadata?.videoUrl}
-                        className="w-full h-full"
-                        allowFullScreen
-                    />
+                    <div className="w-full h-full bg-accent/10 flex items-center justify-center text-accent">
+                        {/* Placeholder for video - replace with actual video player */}
+                        <p>Video: {videoBlock.metadata?.videoUrl}</p>
+                    </div>
                 </div>
             )}
 
             {/* Lesson Title */}
-            <h1 className="text-3xl font-bold">{lesson.title}</h1>
+            <div>
+                <h1 className="text-3xl font-bold">{lesson.title}</h1>
+                <p className="text-muted-foreground mt-2">{lesson.description}</p>
+            </div>
 
             {/* Main Content */}
             <div className="prose dark:prose-invert max-w-none">
-                {mainContent.map((block, index) => {
-                    if (block.type === 'text' && block.format === 'markdown') {
-                        return <Markdown key={index} content={block.content} />
-                    }
-                    return null
-                })}
+                {mainContent.map((block, index) => (
+                    <Markdown key={index} content={block.content} />
+                ))}
             </div>
 
-            {/* Lesson Navigation and Complete Button */}
+            {/* Navigation */}
             <div className="border-t border-border pt-8 mt-8">
                 <div className="flex items-center justify-between">
                     <div className="flex gap-4">
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => previousLesson && onLessonChange(previousLesson)}
                             disabled={!previousLesson}
                         >
                             <ChevronLeft className="mr-2 h-4 w-4" />
-                            Previous Lesson
+                            Previous
                         </Button>
                         <Button
                             variant="outline"
-                            size="sm"
                             onClick={() => nextLesson && onLessonChange(nextLesson)}
                             disabled={!nextLesson}
                         >
-                            Next Lesson
+                            Next
                             <ChevronRight className="ml-2 h-4 w-4" />
                         </Button>
                     </div>
@@ -89,7 +89,6 @@ export function LessonContent({
                         variant={completedLessons.includes(lesson.id) ? "outline" : "default"}
                         onClick={handleToggleComplete}
                         disabled={isCompleting}
-                        size="lg"
                     >
                         <CheckCircle className="mr-2 h-4 w-4" />
                         {completedLessons.includes(lesson.id) ? 'Completed' : 'Mark as Complete'}
